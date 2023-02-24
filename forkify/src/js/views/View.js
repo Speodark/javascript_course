@@ -3,13 +3,48 @@ import icons from 'url:../../img/icons.svg';
 export default class View {
   _data;
 
-  render(data) {
-    if (!data || (Array.isArray(data) && data.length === 0)) return this.renderError();
+  render(data, render = true) {
+    if (!data || (Array.isArray(data) && data.length === 0))
+      return this.renderError();
 
     this._data = data;
     const markup = this._generateMarkup();
+
+    if (!render) return markup;
+    
     this.#clear();
     this._parentElement.insertAdjacentHTML('afterbegin', markup);
+  }
+
+  update(data) {
+    if (!data || (Array.isArray(data) && data.length === 0))
+      return this.renderError();
+
+    this._data = data;
+    const newMarkup = this._generateMarkup();
+
+    const newDOM = document.createRange().createContextualFragment(newMarkup);
+    const newElemennts = Array.from(newDOM.querySelectorAll('*'));
+    const curElements = Array.from(this._parentElement.querySelectorAll('*'));
+
+    newElemennts.forEach((newEl, i) => {
+      const curEl = curElements[i];
+      // Update change text
+      if (
+        !newEl.isEqualNode(curEl) &&
+        newEl.firstChild?.nodeValue.trim() != ''
+      ) {
+        curEl.textContent = newEl.textContent;
+      }
+
+      // Update change attributes
+      if (!newEl.isEqualNode(curEl)) {
+        console.log();
+        Array.from(newEl.attributes).forEach(attr =>
+          curEl.setAttribute(attr.name, attr.value)
+        );
+      }
+    });
   }
 
   #clear() {
